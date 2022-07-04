@@ -8,7 +8,7 @@ import akka.util.ByteString
 
 import java.nio.file.{Paths, StandardOpenOption}
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object AkkaStreamsQuickStartMain extends App {
   implicit val system: ActorSystem = ActorSystem("quick-start")
@@ -23,9 +23,12 @@ object AkkaStreamsQuickStartMain extends App {
 
   intDone.onComplete(t => println(t.getOrElse(null)))
 
-  private val eventualDone: Future[Done] = source.scan(0)((acc, x) => acc + x).runWith(Sink.foreach(println(_)))
+  private val eventualInt: Future[Int] = source.scan(0)((acc, x) => acc + x).runWith(Sink.last)
 
-  //  eventualDone.onComplete( _ => system.terminate())
+  eventualInt.onComplete {
+    case Success(i) => println(s"total is $i")
+    case Failure(e) => throw e
+  }
 
   //  eventualInt.onComplete(t => println("scan " + t.getOrElse(0)))
 
